@@ -1,0 +1,100 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1770819097385-1
+      author: NAS
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createSequence:
+            incrementBy: 50
+            sequenceName: users_seq
+            startValue: 1
+      rollback:
+        - dropSequence:
+            sequenceName: users_seq
+
+  - changeSet:
+      id: create-user-role-enum
+      author: NAS
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE user_role AS ENUM ('USER', 'ADMIN');
+      rollback:
+        - sql:
+            sql: |
+              DROP TYPE IF EXISTS user_role CASCADE;
+
+  - changeSet:
+      id: 1770819097385-2
+      author: NAS
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_users
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: email
+                  type: VARCHAR(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: password
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: first_name
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: last_name
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: role
+                  type: user_role
+            tableName: users
+      rollback:
+        - dropTable:
+            tableName: users
+
+  - changeSet:
+      id: 1770819097385-3
+      author: NAS
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: email
+            constraintName: uc_users_email
+            tableName: users
+      rollback:
+        - dropUniqueConstraint:
+            constraintName: uc_users_email
+            tableName: users
+
+  - changeSet:
+      id: 1770819097385-4
+      author: NAS
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: email
+            indexName: email_idx
+            tableName: users
+      rollback:
+        - dropIndex:
+            indexName: email_idx
+            tableName: users
+

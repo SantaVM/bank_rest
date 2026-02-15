@@ -1,0 +1,107 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1770852013985-5
+      author: NAS
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createSequence:
+            incrementBy: 50
+            sequenceName: credit_card_seq
+            startValue: 1
+      rollback:
+        - dropSequence:
+            sequenceName: credit_card_seq
+
+  - changeSet:
+      id: create-card-status-enum
+      author: NAS
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE credit_card_status AS ENUM ('ACTIVE', 'BLOCKED', 'EXPIRED');
+      rollback:
+        - sql:
+            sql: |
+              DROP TYPE IF EXISTS credit_card_status CASCADE;
+
+  - changeSet:
+      id: 1770852013985-6
+      author: NAS
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_creditcard
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: card_holder
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: card_number
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: expiry_date
+                  type: DATE
+              - column:
+                  constraints:
+                    nullable: false
+                  name: status
+                  type: credit_card_status
+              - column:
+                  constraints:
+                    nullable: false
+                  name: to_block
+                  type: BOOLEAN
+              - column:
+                  constraints:
+                    nullable: false
+                  name: balance
+                  type: DECIMAL
+              - column:
+                  name: user_id
+                  type: BIGINT
+            tableName: credit_card
+      rollback:
+        - dropTable:
+            tableName: credit_card
+
+  - changeSet:
+      id: 1770852013985-7
+      author: NAS
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: card_number
+            constraintName: uc_creditcard_cardnumber
+            tableName: credit_card
+      rollback:
+        - dropUniqueConstraint:
+            constraintName: uc_creditcard_cardnumber
+            tableName: credit_card
+
+  - changeSet:
+      id: 1770852013985-8
+      author: NAS
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: credit_card
+            constraintName: FK_CREDITCARD_ON_USER
+            referencedColumnNames: id
+            referencedTableName: users
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: credit_card
+            constraintName: FK_CREDITCARD_ON_USER
