@@ -1,83 +1,127 @@
 package com.example.bankcards.exception;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class ExceptionControllerAdvice {
 
+    private final ErrorResponseFactory errorFactory;
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
+    public ProblemDetail handleValidation(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors()
+                .forEach(err -> errors.put(err.getField(), err.getDefaultMessage()));
 
-        ProblemDetail resp = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "Validation failed");
-
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            resp.setProperty(fieldName, errorMessage);
-        });
-
-        return resp;
+        return errorFactory.createValidation(request, errors);
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ProblemDetail handleConflictException(ConflictException ex) {
-        ProblemDetail resp = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
-        resp.setProperty("description", "Conflict");
-        return resp;
+    public ProblemDetail handleConflict(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+        return errorFactory.create(
+                ErrorType.CONFLICT,
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                request
+        );
     }
 
     @ExceptionHandler(Exception.class)
-    public ProblemDetail handleSecurityException(Exception exception) {
+    public ProblemDetail handleSecurityException(
+            Exception ex,
+            HttpServletRequest request
+    ) {
         ProblemDetail errorDetail = null;
 
         // TODO send this stack trace to an observability tool
-        exception.printStackTrace();
+        ex.printStackTrace();
 
-        if (exception instanceof BadCredentialsException) {
-            errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(401), exception.getMessage());
-            errorDetail.setProperty("description", "The username or password is incorrect");
-
-            return errorDetail;
+        if (ex instanceof BadCredentialsException) {
+            errorDetail = errorFactory.create(
+                    ErrorType.BAD_CREDENTIALS,
+                    HttpStatus.UNAUTHORIZED,
+                    ex.getMessage(),
+                    request
+            );
         }
 
-        if (exception instanceof AccountStatusException) {
-            errorDetail =
-                    ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(401), exception.getMessage());
-            errorDetail.setProperty("description", "The account is locked");
+        if (ex instanceof HttpMessageNotReadableException) {
+            errorDetail = errorFactory.create(
+                    ErrorType.BAD_REQUEST,
+                    HttpStatus.BAD_REQUEST,
+                    ex.getMessage(),
+                    request
+            );
         }
 
-        if (exception instanceof AccessDeniedException) {
-            errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(403), exception.getMessage());
-            errorDetail.setProperty("description", "You are not authorized to access this resource");
+        if (ex instanceof NoSuchElementException || ex instanceof EntityNotFoundException) {
+            errorDetail = errorFactory.create(
+                    ErrorType.NOT_FOUND,
+                    HttpStatus.NOT_FOUND,
+                    ex.getMessage(),
+                    request
+            );
         }
 
-        if (exception instanceof SignatureException) {
-            errorDetail =
-                    ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(401), exception.getMessage());
-            errorDetail.setProperty("description", "The JWT signature is invalid");
+        if (ex instanceof AccountStatusException) {
+            errorDetail = errorFactory.create(
+                        ErrorType.AUTHORIZATION_DENIED,
+                        HttpStatus.UNAUTHORIZED,
+                        ex.getMessage(),
+                        request
+                    );
         }
 
-        if (exception instanceof ExpiredJwtException) {
-            errorDetail =
-                    ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(401), exception.getMessage());
-            errorDetail.setProperty("description", "The JWT token has expired");
+        if (ex instanceof AccessDeniedException) {
+            errorDetail = errorFactory.create(
+                    ErrorType.AUTHORIZATION_DENIED,
+                    HttpStatus.FORBIDDEN,
+                    ex.getMessage(),
+                    request
+            );
+        }
+
+        if (ex instanceof SignatureException || ex instanceof ExpiredJwtException || ex instanceof MalformedJwtException) {
+            errorDetail = errorFactory.create(
+                    ErrorType.AUTHENTICATION_REQUIRED,
+                    HttpStatus.UNAUTHORIZED,
+                    ex.getMessage(),
+                    request
+            );
         }
 
         if (errorDetail == null) {
-            errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(500), exception.getMessage());
-            errorDetail.setProperty("description", "Unknown internal server error.");
+            errorDetail = errorFactory.create(
+                    ErrorType.INTERNAL_ERROR,
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unexpected server error",
+                    request
+            );
         }
 
         return errorDetail;

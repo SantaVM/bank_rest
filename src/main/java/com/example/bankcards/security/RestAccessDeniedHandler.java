@@ -1,8 +1,11 @@
 package com.example.bankcards.security;
 
+import com.example.bankcards.exception.ErrorResponseFactory;
+import com.example.bankcards.exception.ErrorType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -13,8 +16,10 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class RestAccessDeniedHandler implements AccessDeniedHandler {
 
+    private final ErrorResponseFactory errorFactory;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -24,13 +29,19 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
             AccessDeniedException ex
     ) throws IOException {
 
-        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
-        problem.setTitle("Access denied");
-        problem.setDetail("You are not authorized to access this resource");
-        problem.setProperty("path", request.getRequestURI());
+        ProblemDetail pd = errorFactory.create(
+                ErrorType.AUTHORIZATION_DENIED,
+                HttpStatus.FORBIDDEN,
+                "You are not authorized to access this resource",
+                request
+        );
 
-        response.setStatus(HttpStatus.FORBIDDEN.value());
+        write(response, pd);
+    }
+
+    private void write(HttpServletResponse response, ProblemDetail pd) throws IOException {
+        response.setStatus(pd.getStatus());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getOutputStream(), problem);
+        objectMapper.writeValue(response.getOutputStream(), pd);
     }
 }

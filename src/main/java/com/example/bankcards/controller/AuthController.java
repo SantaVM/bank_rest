@@ -1,6 +1,7 @@
 package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.*;
+import com.example.bankcards.util.swagger.ErrorResponseSchema;
 import com.example.bankcards.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -11,9 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,16 +34,17 @@ public class AuthController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "Success",
-                            content = {
-                                    @Content(
+                            content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = UserLoginRespDto.class) )
-                            }
                     ),
                     @ApiResponse(
                             description = "Unauthorized",
                             responseCode = "401",
-                            content = {@Content(schema = @Schema(implementation = ErrorResponse.class), mediaType = "application/json")}
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = ErrorResponseSchema.class)
+                            )
                     )
             }
     )
@@ -62,28 +63,24 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "201", description = "User added successfully",
-                    content = {@Content(mediaType = "application/json",
+                    content = @Content(mediaType = "application/json",
                             schema =
-                            @Schema(implementation = UserRespDto.class))}
+                            @Schema(implementation = UserRespDto.class))
             ),
             @ApiResponse(
                     responseCode = "400", description = "Validation errors",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation =
-                                            ProblemDetail.class)
-                            )
-                    }
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponseSchema.class)
+                    )
             ),
             @ApiResponse(
-                    responseCode = "409", description = "Email must be unique",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ProblemDetail.class)
-                            )
-                    }
+                    responseCode = "409",
+                    description = "Conflict",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponseSchema.class)
+                    )
             )
     })
     public ResponseEntity<?> register(@Valid @RequestBody UserRegisterDto dto){
