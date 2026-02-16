@@ -75,14 +75,6 @@ public class UserController {
                             schema = @Schema(implementation = UserPageResponse.class)
                     )
             ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Validation error",
-                    content = @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponseSchema.class)
-                    )
-            ),
     })
     public Page<UserListDto> getUsers(
             @RequestParam(required = false) String firstName,
@@ -116,14 +108,8 @@ public class UserController {
                             schema = @Schema(implementation = UserRespDto.class)
                     )
             ),
-            @ApiResponse(
-                    description = "User not found",
-                    responseCode = "404",
-                    content = @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseSchema.class)
-                            )
-            ),
+            @ApiResponse(responseCode = "404", ref = "NotFound"), // Ссылка на
+            // компонент
     })
     public ResponseEntity<UserRespDto> getUserById(@PathVariable Long userId) {
         User  user = service.findOne(userId);
@@ -143,22 +129,9 @@ public class UserController {
                             schema = @Schema(implementation = UserRespDto.class)
                     )
             ),
-            @ApiResponse(
-                    description = "User not found",
-                    responseCode = "404",
-                    content = @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponseSchema.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "Conflict",
-                    content = @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponseSchema.class)
-                    )
-            )
+            @ApiResponse(responseCode = "400", ref = "Validation"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "409", ref = "Conflict"),
     })
     public ResponseEntity<UserRespDto> updateUser(@PathVariable Long userId,
                                                   @Valid @RequestBody UserUpdateDto dto) {

@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Map;
 
-@Schema(name = "ErrorResponse", description = "Unified error response")
+@Schema(name = "ErrorResponseSchema", description = "Unified error response")
 public class ErrorResponseSchema {
 
     @Schema(example = "AUTHORIZATION_DENIED")

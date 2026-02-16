@@ -38,14 +38,7 @@ public class AuthController {
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = UserLoginRespDto.class) )
                     ),
-                    @ApiResponse(
-                            description = "Unauthorized",
-                            responseCode = "401",
-                            content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = ErrorResponseSchema.class)
-                            )
-                    )
+                    @ApiResponse(responseCode = "401", ref = "401")
             }
     )
     public ResponseEntity<UserLoginRespDto> login(@Valid @RequestBody UserLoginDto authRequest){
@@ -67,21 +60,8 @@ public class AuthController {
                             schema =
                             @Schema(implementation = UserRespDto.class))
             ),
-            @ApiResponse(
-                    responseCode = "400", description = "Validation errors",
-                    content = @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponseSchema.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "Conflict",
-                    content = @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponseSchema.class)
-                    )
-            )
+            @ApiResponse(responseCode = "400", ref = "Validation"),
+            @ApiResponse(responseCode = "409", ref = "Conflict")
     })
     public ResponseEntity<?> register(@Valid @RequestBody UserRegisterDto dto){
         UserRespDto regUser = service.register(dto);
