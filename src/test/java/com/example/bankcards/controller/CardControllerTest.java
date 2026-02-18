@@ -7,7 +7,6 @@ import com.example.bankcards.dto.CardTransferDto;
 import com.example.bankcards.entity.CreditCard;
 import com.example.bankcards.exception.ErrorResponseFactory;
 import com.example.bankcards.security.JwtAuthenticationFilter;
-import com.example.bankcards.security.JwtService;
 import com.example.bankcards.service.CardService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
