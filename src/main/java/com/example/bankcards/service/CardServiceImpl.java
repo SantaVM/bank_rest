@@ -9,6 +9,7 @@ import com.example.bankcards.exception.OperationRejectedException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.CardSpecifications;
 import com.example.bankcards.util.CardUtil;
+import com.example.bankcards.util.CryptoUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class CardServiceImpl implements CardService{
 
     private final CardRepository repository;
     private final UserService userService;
+    private final CryptoUtils cryptoUtils;
 
     @Override
     public Page<CardRespDto> getUserCards(CardHolderListDto filter,
@@ -58,7 +60,7 @@ public class CardServiceImpl implements CardService{
             spec = spec.and(CardSpecifications.hasToBlock(filter.getToBlock()));
         }
 
-        return repository.findAll(spec, pageable).map(CardRespDto::toDto);
+        return repository.findAll(spec, pageable).map(card -> CardRespDto.toDto(card, cryptoUtils));
 
     }
 
@@ -92,7 +94,7 @@ public class CardServiceImpl implements CardService{
             spec = spec.and(CardSpecifications.hasToBlock(filter.getToBlock()));
         }
 
-        return repository.findAll(spec, pageable).map(CardRespDto::toDto);
+        return repository.findAll(spec, pageable).map(card -> CardRespDto.toDto(card, cryptoUtils));
     }
 
     @Override
@@ -108,7 +110,7 @@ public class CardServiceImpl implements CardService{
         CreditCard newCard = CreditCard.builder()
                 .owner(user)
                 .cardHolder(user.getFirstName().toUpperCase() + " " + user.getLastName().toUpperCase())
-                .cardNumber(dto.getCardNumber())
+                .cardNumber(cryptoUtils.encrypt(dto.getCardNumber()))
                 .expiryDate(CardUtil.parseExpiryDate(dto.getExpiryDate()))
                 .balance(CardUtil.getAmountAsBigInteger(dto.getBalance()))
                 .build();
@@ -120,7 +122,7 @@ public class CardServiceImpl implements CardService{
             throw new ConflictException("ERROR: Card already registered: " + dto.getCardNumber());
         }
 
-        return CardRespDto.toDto(newCard);
+        return CardRespDto.toDto(newCard, cryptoUtils);
     }
 
     @Transactional
@@ -138,7 +140,7 @@ public class CardServiceImpl implements CardService{
         }
         card.setToBlock(true);
         repository.saveAndFlush(card);
-        return CardRespDto.toDto(card);
+        return CardRespDto.toDto(card,  cryptoUtils);
     }
 
     @Transactional
@@ -200,7 +202,7 @@ public class CardServiceImpl implements CardService{
 
         found.changeStatus(dto.newStatus());
 
-        return CardRespDto.toDto(found);
+        return CardRespDto.toDto(found, cryptoUtils);
     }
 
     private Long extractUserId(Authentication auth){

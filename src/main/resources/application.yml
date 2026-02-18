@@ -1,24 +1,11 @@
-#
-# application.yml — главный конфигурационный файл Spring Boot.
-
-#Что нужно сделать:
-#  - Указать настройки подключения к базе данных.
-#  - Указать порт приложения.
-#  - Настроить параметры безопасности и JWT.
-#  - Включить Swagger UI.
 server:
   port: 8080
 
-app:
-  cors:
-    origins: https://localhost:8080,http://localhost:8080,
-      https://localhost:8081,http://localhost:8081
-    methods: HEAD,GET,POST,OPTIONS,PATCH,DELETE
-  jwt:
-    secret: iNa0fyrTACIZxkT2fu9kET4FtF1BJbIviNa0fyrTACIZxkT2fu9kET4FtF1BJbIv
-    expiration-time-min: 5
 
 spring:
+  profiles:
+    active: dev
+
   application:
     name: bank-cards
 
@@ -48,6 +35,17 @@ spring:
     enabled: true
     change-log: classpath:/db/changelog-master.yaml
 
+app:
+  jwt:
+    secret: iNa0fyrTACIZxkT2fu9kET4FtF1BJbIviNa0fyrTACIZxkT2fu9kET4FtF1BJbIv
+    expiration-time-min: 15
+  cors:
+    origins:
+    - https://localhost:8080
+    - http://localhost:8080
+  crypto:
+    key: 1234567890123456
+    vector: abcdef9876543210
 
 springdoc:
   swagger-ui:

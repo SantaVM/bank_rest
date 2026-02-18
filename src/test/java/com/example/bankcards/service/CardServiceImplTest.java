@@ -1,15 +1,13 @@
 package com.example.bankcards.service;
 
-import com.example.bankcards.dto.CardCreateDto;
-import com.example.bankcards.dto.CardRespDto;
-import com.example.bankcards.dto.CardStatusDto;
-import com.example.bankcards.dto.CardTransferDto;
+import com.example.bankcards.dto.*;
 import com.example.bankcards.entity.CreditCard;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.BusinessException;
 import com.example.bankcards.exception.ConflictException;
 import com.example.bankcards.exception.OperationRejectedException;
 import com.example.bankcards.repository.CardRepository;
+import com.example.bankcards.util.CryptoUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +15,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -32,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 public class CardServiceImplTest {
@@ -40,6 +44,9 @@ public class CardServiceImplTest {
 
     @Mock
     UserService userService;
+
+    @Mock
+    CryptoUtils cryptoUtils;
 
     @InjectMocks
     CardServiceImpl service;
@@ -80,6 +87,27 @@ public class CardServiceImplTest {
 
         assertNotNull(number);
         assertFalse(number.isBlank());
+    }
+
+    @Test
+    void shouldReturnUserCards_withDecryptedNumber() {
+
+        when(repository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(card)));
+
+        when(cryptoUtils.decrypt("1234567890123456"))
+                .thenReturn("4111111111111111");
+
+        // when
+        Page<CardRespDto> result =
+                service.getUserCards(new CardHolderListDto(), auth, PageRequest.of(0, 10));
+
+        // then
+        assertThat(result.getContent())
+                .extracting(CardRespDto::getCardNumber)
+                .containsExactly("4111111111111111");
+
+        verify(cryptoUtils).decrypt("1234567890123456");
     }
 
     @Test

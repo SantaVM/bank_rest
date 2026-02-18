@@ -1,20 +1,26 @@
 package com.example.bankcards.util;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 
+@Component
 public class CryptoUtils {
-    //TODO: move to properties
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
-    private static final String SECRET_KEY = "1234567890123456";
-    private static final String INIT_VECTOR = "abcdef9876543210";
+    @Value("${app.crypto.key}")
+    private String secret_key;
+    @Value("${app.crypto.vector}")
+    private String init_vector;
 
-    public static String encrypt(String value) {
+    public String encrypt(String value) {
         try {
-            IvParameterSpec iv = new IvParameterSpec(INIT_VECTOR.getBytes());
-            SecretKeySpec skeySpec = new SecretKeySpec(SECRET_KEY.getBytes(), "AES");
+            IvParameterSpec iv = new IvParameterSpec(init_vector.getBytes());
+            SecretKeySpec skeySpec = new SecretKeySpec(secret_key.getBytes(),
+                    "AES");
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
@@ -26,10 +32,10 @@ public class CryptoUtils {
         }
     }
 
-    public static String decrypt(String encrypted) {
+    public String decrypt(String encrypted) {
         try {
-            IvParameterSpec iv = new IvParameterSpec(INIT_VECTOR.getBytes());
-            SecretKeySpec skeySpec = new SecretKeySpec(SECRET_KEY.getBytes(), "AES");
+            IvParameterSpec iv = new IvParameterSpec(init_vector.getBytes());
+            SecretKeySpec skeySpec = new SecretKeySpec(secret_key.getBytes(), "AES");
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);

@@ -2,6 +2,7 @@ package com.example.bankcards.dto;
 
 import com.example.bankcards.entity.CreditCard;
 import com.example.bankcards.util.CardUtil;
+import com.example.bankcards.util.CryptoUtils;
 import com.example.bankcards.util.Mask;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,8 +10,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
 
 @Getter
 @Setter
@@ -27,11 +26,11 @@ public class CardRespDto {
     private BigDecimal balance;
     private Long userId;
 
-    public static CardRespDto toDto(CreditCard card) {
+    public static CardRespDto toDto(CreditCard card, CryptoUtils cryptoUtils) {
         CardRespDto dto = new CardRespDto();
         dto.id = card.getId();
         dto.cardHolder = card.getCardHolder();
-        dto.cardNumber = card.getCardNumber();
+        dto.cardNumber = cryptoUtils.decrypt(card.getCardNumber());
         dto.expiryDate = CardUtil.formatExpiryDate(card.getExpiryDate());
         dto.status = card.getStatus();
         dto.toBlock = card.getToBlock();

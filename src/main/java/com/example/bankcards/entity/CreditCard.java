@@ -1,7 +1,6 @@
 package com.example.bankcards.entity;
 
 import com.example.bankcards.exception.BusinessException;
-import com.example.bankcards.util.CreditCardEncryptor;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -26,7 +25,6 @@ public class CreditCard {
     @Column(nullable = false)
     private String cardHolder;
 
-    @Convert(converter = CreditCardEncryptor.class)
     @Column(nullable = false, unique = true)
     private String cardNumber;
 
