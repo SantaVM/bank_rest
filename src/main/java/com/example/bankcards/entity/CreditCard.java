@@ -1,5 +1,6 @@
 package com.example.bankcards.entity;
 
+import com.example.bankcards.exception.BusinessException;
 import com.example.bankcards.util.CreditCardEncryptor;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -52,9 +53,24 @@ public class CreditCard {
     @Column(name = "user_id", insertable = false, updatable = false)
     private Long userId;
 
+    public void changeStatus(CardStatus newStatus) {
+        if (!status.canTransitionTo(newStatus)) {
+            throw new BusinessException("Cannot change status from " + status + " to " + newStatus);
+        }
+        this.status = newStatus;
+    }
+
     public enum CardStatus {
         ACTIVE,
         BLOCKED,
-        EXPIRED
+        EXPIRED;
+
+        public boolean canTransitionTo(CardStatus newStatus) {
+            return switch (this) {
+                case ACTIVE -> newStatus == BLOCKED || newStatus == EXPIRED;
+                case BLOCKED -> newStatus == ACTIVE || newStatus == EXPIRED;
+                case EXPIRED -> false;
+            };
+        }
     }
 }

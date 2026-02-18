@@ -14,23 +14,4 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
-
-    //TODO: check this
-    @Query("""
-            SELECT u FROM User u WHERE
-                (:id IS NULL OR u.id = :id) AND
-                (:email IS NULL OR u.email = :email) AND
-                (:role IS NULL OR u.role = :role) AND
-                (:firstName IS NULL OR u.firstName LIKE :firstName) AND
-                (:lastName IS NULL OR u.lastName LIKE :lastName)
-            """
-    )
-    Page<User> findByCriteria(
-            @Param("id") Long id,
-            @Param("email") String email,
-            @Param("role") User.Role role,
-            @Param("firstName") String firstName,
-            @Param("lastName") String lastName,
-            Pageable pageable
-    );
 }

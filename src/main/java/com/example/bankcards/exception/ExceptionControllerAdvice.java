@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AccountStatusException;
@@ -27,7 +28,7 @@ public class ExceptionControllerAdvice {
     private final ErrorResponseFactory errorFactory;
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleValidation(
+    public ResponseEntity<ProblemDetail> handleValidation(
             MethodArgumentNotValidException ex,
             HttpServletRequest request
     ) {
@@ -35,24 +36,27 @@ public class ExceptionControllerAdvice {
         ex.getBindingResult().getFieldErrors()
                 .forEach(err -> errors.put(err.getField(), err.getDefaultMessage()));
 
-        return errorFactory.createValidation(request, errors);
+        ProblemDetail pd = errorFactory.createValidation(request, errors);
+        return ResponseEntity.status(pd.getStatus()).body(pd);
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ProblemDetail handleConflict(
+    public ResponseEntity<ProblemDetail> handleConflict(
             Exception ex,
             HttpServletRequest request
     ) {
-        return errorFactory.create(
+        ProblemDetail pd = errorFactory.create(
                 ErrorType.CONFLICT,
                 HttpStatus.CONFLICT,
                 ex.getMessage(),
                 request
         );
+
+        return ResponseEntity.status(pd.getStatus()).body(pd);
     }
 
     @ExceptionHandler(Exception.class)
-    public ProblemDetail handleSecurityException(
+    public ResponseEntity<ProblemDetail> handleSecurityException(
             Exception ex,
             HttpServletRequest request
     ) {
@@ -97,7 +101,10 @@ public class ExceptionControllerAdvice {
                     );
         }
 
-        if (ex instanceof AccessDeniedException) {
+        if (ex instanceof IllegalArgumentException ||
+                ex instanceof OperationRejectedException ||
+                ex instanceof BusinessException ||
+                ex instanceof AccessDeniedException) {
             errorDetail = errorFactory.create(
                     ErrorType.AUTHORIZATION_DENIED,
                     HttpStatus.FORBIDDEN,
@@ -124,6 +131,6 @@ public class ExceptionControllerAdvice {
             );
         }
 
-        return errorDetail;
+        return ResponseEntity.status(errorDetail.getStatus()).body(errorDetail);
     }
 }

@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2026-02-17-credit-card-balance-check
+      author: NAS
+      comment: "Add check constraint for non-negative balance"
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE credit_card 
+              ADD CONSTRAINT chk_credit_card_balance_non_negative 
+              CHECK (balance >= 0);
+            endDelimiter: ;
+      rollback:
+        - sql:
+            sql: ALTER TABLE credit_card DROP CONSTRAINT chk_credit_card_balance_non_negative;

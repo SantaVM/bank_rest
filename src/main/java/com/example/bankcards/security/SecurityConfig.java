@@ -1,6 +1,5 @@
 package com.example.bankcards.security;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -33,8 +32,6 @@ public class SecurityConfig {
 
     @Value("${app.cors.origins}")
     private String[] corsOrigins; //TODO: fix it
-    @Value("${app.cors.methods}")
-    private String[] corsMethods;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,14 +42,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize ->
                         authorize
                                 .requestMatchers(
-                                        "/auth/**",
+                                        "api/*/auth/**",
                                         "/swagger-ui.html", "/swagger-ui/**",
                                         "/swagger-resources", "/swagger-resources/**",
                                         "/configuration/ui", "/configuration/security",
                                         "/v3/api-docs", "/v3/api-docs/**"
                                 ).permitAll()
-                                .requestMatchers("/users/admin/**", "/cards/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/users/**", "/cards/**").hasAnyRole("USER", "ADMIN")
+                                .requestMatchers("api/*/*/admin/**").hasRole(
+                                        "ADMIN")
+                                .requestMatchers("api/*/users/**",
+                                        "api/*/cards/**").hasAnyRole("USER",
+                                        "ADMIN")
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -1,7 +1,7 @@
 package com.example.bankcards.service;
 
 import com.example.bankcards.dto.UserFilterDto;
-import com.example.bankcards.dto.UserListDto;
+import com.example.bankcards.dto.UserRespDto;
 import com.example.bankcards.dto.UserUpdateDto;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.ConflictException;
@@ -26,7 +26,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository repository;
 
     @Override
-    public Page<UserListDto> findAll(UserFilterDto filter, Pageable pageable) {
+    public Page<UserRespDto> findAll(UserFilterDto filter, Pageable pageable) {
 
         Specification<User> specification = Specification.unrestricted();
 
@@ -51,13 +51,13 @@ public class UserServiceImpl implements UserService {
         }
 
         // если specification = null → вернутся все пользователи
-        return repository.findAll(specification, pageable).map(UserListDto::toDto);
+        return repository.findAll(specification, pageable).map(UserRespDto::toDto);
     }
 
     @Override
     public User findOne(Long userId) {
         return repository.findById(userId).orElseThrow(
-                () -> new NoSuchElementException("User not found with " +
+                () -> new EntityNotFoundException("User not found with " +
                         "id: " + userId)
         );
     }
@@ -68,7 +68,6 @@ public class UserServiceImpl implements UserService {
 
         User user = repository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
 
         Optional.ofNullable(dto.getEmail())
                     .ifPresent(user::setEmail);

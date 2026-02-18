@@ -1,5 +1,8 @@
 package com.example.bankcards.util;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -84,6 +87,30 @@ public class CardUtil {
             sum += digit;
         }
         return (10 - (sum % 10)) % 10;
+    }
+
+    /**
+     * Преобразует сумму в копейках/центах в десятичное представление (рубли/доллары) с двумя знаками после запятой.
+     *
+     * @param amountInCents сумма в самых мелких единицах (например, 123456 = 1234.56)
+     * @return BigDecimal с двумя знаками после запятой
+     */
+    public static BigDecimal fromCentsToDecimal(BigInteger amountInCents) {
+        if (amountInCents == null) {
+            return null;
+        }
+        return new BigDecimal(amountInCents).movePointLeft(2).setScale(2, RoundingMode.UNNECESSARY);
+    }
+
+    /**
+     * Преобразует сумму из числа с двумя знаками после запятой в
+     * представление BifInteger
+     *
+     * @param amount сумма с двумя знаками после запятой
+     * @return
+     */
+    public static BigInteger getAmountAsBigInteger(BigDecimal amount) {
+        return amount.multiply(BigDecimal.valueOf(100)).toBigIntegerExact();
     }
 
     // Тест

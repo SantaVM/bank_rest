@@ -1,12 +1,10 @@
 package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.UserFilterDto;
-import com.example.bankcards.dto.UserListDto;
 import com.example.bankcards.dto.UserRespDto;
 import com.example.bankcards.dto.UserUpdateDto;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.util.swagger.CommonApiResponses;
-import com.example.bankcards.util.swagger.ErrorResponseSchema;
 import com.example.bankcards.service.UserService;
 import com.example.bankcards.util.swagger.UserPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/users")
+@RequestMapping("api/v1/users")
 @RestController
 @RequiredArgsConstructor
 @SecurityRequirement(name = "JWT Bearer")
@@ -76,7 +74,7 @@ public class UserController {
                     )
             ),
     })
-    public Page<UserListDto> getUsers(
+    public ResponseEntity<Page<UserRespDto>> getUsers(
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
             @RequestParam(required = false) String email,
@@ -92,7 +90,9 @@ public class UserController {
                 role
         );
 
-        return service.findAll(filter, pageable);
+        Page<UserRespDto> usersPage = service.findAll(filter, pageable);
+
+        return ResponseEntity.ok(usersPage);
     }
 
     @GetMapping("/admin/{userId}")

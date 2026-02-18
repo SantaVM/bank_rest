@@ -5,8 +5,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 public final class UserSpecifications {
 
-    private UserSpecifications() {
-    }
+    private UserSpecifications() {}
 
     public static Specification<User> firstNameLike(String firstName) {
         return (root, query, cb) ->

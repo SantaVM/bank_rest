@@ -2,37 +2,13 @@ package com.example.bankcards.repository;
 
 import com.example.bankcards.entity.CreditCard;
 import jakarta.persistence.LockModeType;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
+import java.math.BigInteger;
 import java.util.Optional;
 
-public interface CardRepository extends JpaRepository<CreditCard, Long> {
-
-    boolean existsByCardNumber(String cardNumber);
-
-    @Query("""
-      SELECT c FROM CreditCard c WHERE
-      c.userId = COALESCE(:userId, c.userId) AND
-      c.cardHolder LIKE COALESCE(:cardHolder, c.cardHolder) AND
-      c.status = COALESCE(:status, c.status) AND
-      c.toBlock = COALESCE(:toBlock, c.toBlock) AND
-      c.expiryDate = COALESCE(:expiryDate, c.expiryDate)
-      """
-    )
-    Page<CreditCard> findByCriteria(
-            @Param("userId") Long userId,
-            @Param("cardHolder") String cardHolder,
-            @Param("status") CreditCard.CardStatus status,
-            @Param("toBlock") Boolean toBlock,
-            @Param("expiryDate") LocalDate expiryDate,
-            Pageable pageable
-    );
+public interface CardRepository extends JpaRepository<CreditCard, Long>, JpaSpecificationExecutor<CreditCard> {
 
     // можно использовать вместо SELECT FOR UPDATE
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -41,4 +17,55 @@ public interface CardRepository extends JpaRepository<CreditCard, Long> {
 
     @Query(value = "SELECT * FROM credit_card WHERE id = :id FOR UPDATE", nativeQuery = true)
     Optional<CreditCard> findByIdForUpdate(@Param("id") Long id);
+
+    /**
+     * Атомарное списание средств.
+     * Деньги спишутся ТОЛЬКО если balance >= amount.
+     *
+     * @return количество обновлённых строк (0 или 1)
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE CreditCard c
+            SET c.balance = c.balance - :amount
+        WHERE c.id = :cardId
+            AND c.userId = :userId
+            AND c.balance >= :amount
+            AND c.status = :status
+            AND c.toBlock = :toBlock
+        """)
+    int withdraw(
+            @Param("cardId") Long cardId,
+            @Param("userId") Long userId,
+            @Param("amount") BigInteger amount,
+            @Param("status") CreditCard.CardStatus status,
+            @Param("toBlock") Boolean toBlock
+    );
+
+    /**
+     * Атомарное зачисление средств.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE CreditCard c
+           SET c.balance = c.balance + :amount
+         WHERE c.id = :cardId
+            AND c.userId = :userId
+            AND c.status = :status
+            AND c.toBlock = :toBlock
+    """)
+    int deposit(
+            @Param("cardId") Long cardId,
+            @Param("userId") Long userId,
+            @Param("amount") BigInteger amount,
+            @Param("status") CreditCard.CardStatus status,
+            @Param("toBlock") Boolean toBlock
+    );
+
+    @Query("""
+        select coalesce(sum(c.balance), 0)
+        from CreditCard c
+        where c.userId = :userId
+    """)
+    BigInteger sumBalanceByUserId(@Param("userId") Long userId);
 }
