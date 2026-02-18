@@ -111,18 +111,6 @@
         </dependency>
     </dependencies>
 
-<!--    &lt;!&ndash; Только для генерации changelog &ndash;&gt;-->
-<!--    <dependencyManagement>-->
-<!--        <dependencies>-->
-<!--            <dependency>-->
-<!--                <groupId>org.liquibase.ext</groupId>-->
-<!--                <artifactId>liquibase-hibernate6</artifactId>-->
-<!--                <version>4.31.1</version>-->
-<!--                <scope>provided</scope>-->
-<!--            </dependency>-->
-<!--        </dependencies>-->
-<!--    </dependencyManagement>-->
-
     <build>
         <plugins>
             <plugin>
@@ -169,33 +157,8 @@
                     <rollbackCount>1</rollbackCount>
                     <verbose>false</verbose>
                 </configuration>
-<!--                <configuration>-->
-<!--                    &lt;!&ndash; БД &ndash;&gt;-->
-<!--                    <url>jdbc:postgresql://localhost:15432/bank_card</url>-->
-<!--                    <username>postgres</username>-->
-<!--                    <password>example</password>-->
-<!--                    <driver>org.postgresql.Driver</driver>-->
-
-<!--                    &lt;!&ndash; Hibernate entities &ndash;&gt;-->
-<!--                    <referenceUrl>-->
-<!--                        hibernate:spring:com.example.bankcards.entity?dialect=org.hibernate.dialect.PostgreSQLDialect&amp;hibernate.physical_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy&amp;hibernate.implicit_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy-->
-<!--                    </referenceUrl>-->
-
-<!--                    <changeLogFile>-->
-<!--                        src/main/resources/db/changelog-master.yaml-->
-<!--                    </changeLogFile>-->
-
-<!--                    <outputChangeLogFile>-->
-<!--                        src/main/resources/db/migration/${maven.build.timestamp}_changelog.yaml-->
-<!--                    </outputChangeLogFile>-->
-<!--                </configuration>-->
 
                 <dependencies>
-<!--                    <dependency>-->
-<!--                        <groupId>org.liquibase.ext</groupId>-->
-<!--                        <artifactId>liquibase-hibernate6</artifactId>-->
-<!--                        <version>5.0.1</version>-->
-<!--                    </dependency>-->
                     <dependency>
                         <groupId>org.postgresql</groupId>
                         <artifactId>postgresql</artifactId>
