@@ -33,8 +33,17 @@ public class ExceptionControllerAdvice {
             HttpServletRequest request
     ) {
         Map<String, String> errors = new HashMap<>();
+
+        // field level
         ex.getBindingResult().getFieldErrors()
                 .forEach(err -> errors.put(err.getField(), err.getDefaultMessage()));
+
+        // class-level (ObjectError)
+        ex.getBindingResult().getGlobalErrors()
+                .forEach(err -> errors.put(
+                        "global", // или err.getObjectName()
+                        err.getDefaultMessage()
+                ));
 
         ProblemDetail pd = errorFactory.createValidation(request, errors);
         return ResponseEntity.status(pd.getStatus()).body(pd);
