@@ -1,0 +1,974 @@
+openapi: 3.1.0
+info:
+  title: Bank Cards management system
+  description: API Description for Bank Cards management system
+  contact:
+    name: Alex VM
+    email: my@email.com
+  version: 0.0.1
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /api/v1/cards/transfer:
+    post:
+      tags:
+      - Cards
+      summary: Операция перевода Юзером средств между своими картами
+      operationId: transfer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardTransferDto"
+        required: true
+      responses:
+        "200":
+          description: Операция успешно завершена
+          content:
+            text/plain:
+              schema:
+                type: string
+        "400":
+          $ref: "#/components/responses/Validation"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/cards/admin/create:
+    post:
+      tags:
+      - Cards
+      summary: Регистрация Админом новой Карты для Юзера
+      description: |
+        Номер карты валидируется по алгоритму Луна. Чтобы получить валидный номер (при тестировании),
+        можно сгенерировать его с помощью эндпойнта 'cards/admin/generate-card-number'. Срок действия
+        новой карты должен быть не ранее текущей даты (карта не должна быть "просрочена").
+        Баланс карты должен числом СТРОГО С ДВУМЯ ЗНАКАМИ после запятой.
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardCreateDto"
+        required: true
+      responses:
+        "201":
+          description: Карта успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardRespDto"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/auth/sign-up:
+    post:
+      tags:
+      - Authentication
+      summary: Создаётся новый Юзер
+      description: |
+        Роль нового юзера по умолчанию: 'USER'. Имя и фамилия автоматически используются
+        в поле 'CARDHOLDER' для карты, поэтому должны содержать только латинские буквы.
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegisterDto"
+        required: true
+      responses:
+        "201":
+          description: User added successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRespDto"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Authentication
+      summary: Login with email and password
+      description: Get user ID and JWT token
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLoginDto"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserLoginRespDto"
+        "401":
+          $ref: "#/components/responses/401"
+  /api/v1/users/admin/update/{userId}:
+    patch:
+      tags:
+      - Users
+      summary: Изменение Админом данных Юзера по его ID
+      operationId: updateUser
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateDto"
+        required: true
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRespDto"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/cards/block/{cardId}:
+    patch:
+      tags:
+      - Cards
+      summary: Юзер помечает карту для блокировки Админом
+      operationId: blockRequest
+      parameters:
+      - name: cardId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Операция успешно завершена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardRespDto"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/cards/admin/change-status/{cardId}:
+    patch:
+      tags:
+      - Cards
+      summary: "Админ может изменить статус карты. Если текущий статус EXPIRED, то\
+        \ изменить нельзя (получим исключение)."
+      operationId: changeStatus
+      parameters:
+      - name: cardId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardStatusDto"
+        required: true
+      responses:
+        "200":
+          description: Операция успешно завершена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardRespDto"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/users/me:
+    get:
+      tags:
+      - Users
+      summary: Получение данных текущего Юзера (для тестирования)
+      operationId: authenticatedUser
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRespDto"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/users/admin/{userId}:
+    get:
+      tags:
+      - Users
+      summary: Получение Админом данных Юзера по его ID
+      operationId: getUserById
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRespDto"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/users/admin/list:
+    get:
+      tags:
+      - Users
+      summary: Получение Админом списка Юзеров (с фильтрацией и пагинацией)
+      description: При отсутствии параметров фильтрации возвращается список ВСЕХ Юзеров.
+      operationId: getUsers
+      parameters:
+      - name: firstName
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: lastName
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: email
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: role
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - USER
+          - ADMIN
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          type: integer
+          default: 10
+          minimum: 1
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+        required: false
+        schema:
+          type: array
+          default:
+          - "id,ASC"
+          items:
+            type: string
+      responses:
+        "200":
+          description: Page of users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPageResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/cards/my-cards:
+    get:
+      tags:
+      - Cards
+      summary: Получение Юзером списка принадлежащих ему карт (с фильтрацией и пагинацией)
+      description: При отсутствии параметров фильтрации возвращается список ВСЕХ карт.
+      operationId: getAllForMe
+      parameters:
+      - name: dto
+        in: query
+        required: false
+        schema:
+          $ref: "#/components/schemas/CardHolderListDto"
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          type: integer
+          default: 10
+          minimum: 1
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+        required: false
+        schema:
+          type: array
+          default:
+          - "id,ASC"
+          items:
+            type: string
+      responses:
+        "200":
+          description: Page of cards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardPageResponse"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/cards/my-balance:
+    get:
+      tags:
+      - Cards
+      summary: Получить сумму балансов всех карт текущего пользователя
+      description: Возвращает сумму балансов всех карт пользователя
+      operationId: getTotalBalance
+      responses:
+        "200":
+          description: Сумма успешно получена
+          content:
+            text/plain:
+              schema:
+                type: string
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/cards/admin/list:
+    get:
+      tags:
+      - Cards
+      summary: Получение Админом списка всех карт (с фильтрацией и пагинацией)
+      description: При отсутствии параметров фильтрации возвращается список ВСЕХ карт.
+      operationId: getCardsList
+      parameters:
+      - name: dto
+        in: query
+        required: false
+        schema:
+          $ref: "#/components/schemas/CardsListDto"
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          type: integer
+          default: 10
+          minimum: 1
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+        required: false
+        schema:
+          type: array
+          default:
+          - "id,ASC"
+          items:
+            type: string
+      responses:
+        "200":
+          description: Page of cards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardPageResponse"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/cards/admin/generate-card-number:
+    get:
+      tags:
+      - Cards
+      summary: Генерация номера кредитной карты
+      description: Для целей тестирования. Генерирует валидный номер банковской карты
+        (16 цифр) с контрольной по алгоритму Луна.
+      operationId: generate
+      responses:
+        "200":
+          description: Card Number
+          content:
+            text/plain:
+              schema:
+                type: string
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+  /api/v1/cards/admin/delete/{cardId}:
+    delete:
+      tags:
+      - Cards
+      summary: Админ может удалить BLOCKED или EXPIRED карту
+      description: Удаляет карту и возвращает 204 No Content
+      operationId: delete
+      parameters:
+      - name: cardId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Карта успешно удалена
+          content:
+            '*/*':
+              schema:
+                type: object
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseSchema"
+      security:
+      - JWT Bearer: []
+components:
+  schemas:
+    CardTransferDto:
+      type: object
+      properties:
+        fromId:
+          type: integer
+          format: int64
+          example: 2
+          minimum: 1
+        toId:
+          type: integer
+          format: int64
+          example: 1
+          minimum: 1
+        amount:
+          type: number
+          example: 1234.56
+      required:
+      - amount
+      - fromId
+      - toId
+    ErrorResponseSchema:
+      type: object
+      description: Unified error response
+      properties:
+        type:
+          type: string
+          example: AUTHORIZATION_DENIED
+        title:
+          type: string
+          example: Access denied
+        status:
+          type: integer
+          format: int32
+          example: 403
+        detail:
+          type: string
+          example: You are not authorized to access this resource
+        path:
+          type: string
+          example: /users/admin
+        timestamp:
+          type: string
+          example: 2026-02-15T13:28:11Z
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+          description: Validation errors (only for VALIDATION_ERROR)
+          example:
+            email: must be a valid email
+    CardCreateDto:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: 51
+        cardNumber:
+          type: string
+          example: 4000006806224829
+        expiryDate:
+          type: string
+          pattern: "^(0[1-9]|1[0-2])/\\d{2}$"
+        balance:
+          type: number
+          example: 1234.55
+      required:
+      - balance
+      - cardNumber
+      - expiryDate
+      - userId
+    CardRespDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        cardHolder:
+          type: string
+        cardNumber:
+          type: string
+        expiryDate:
+          type: string
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - BLOCKED
+          - EXPIRED
+        toBlock:
+          type: boolean
+        balance:
+          type: number
+        userId:
+          type: integer
+          format: int64
+    UserRegisterDto:
+      type: object
+      description: DTO для регистрации нового пользователя
+      properties:
+        email:
+          type: string
+          format: email
+          description: email
+          example: email@email.com
+          minLength: 1
+        password:
+          type: string
+          description: password
+          example: 12345678
+          maxLength: 20
+          minLength: 6
+        firstName:
+          type: string
+          description: First Name to print it on card
+          example: TOM
+          maxLength: 20
+          minLength: 2
+          pattern: "[A-Za-z]+"
+        lastName:
+          type: string
+          description: First Name to print it on card
+          example: SMITH
+          maxLength: 20
+          minLength: 2
+          pattern: "[A-Za-z]+"
+      required:
+      - email
+      - firstName
+      - lastName
+      - password
+    UserRespDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+          - USER
+          - ADMIN
+        firstName:
+          type: string
+        lastName:
+          type: string
+    UserLoginRespDto:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        token:
+          type: string
+    UserLoginDto:
+      type: object
+      description: Аутентификация пользователя
+      properties:
+        email:
+          type: string
+          format: email
+          description: email
+          example: email@email.com
+          minLength: 1
+        password:
+          type: string
+          description: password
+          example: 12345678
+          maxLength: 20
+          minLength: 6
+      required:
+      - email
+      - password
+    UserUpdateDto:
+      type: object
+      description: Частичное обновление пользователя
+      properties:
+        email:
+          type: string
+          format: email
+          description: email
+          example: email@email.com
+        firstName:
+          type: string
+          description: First Name to print it on card
+          example: TOM
+          maxLength: 20
+          minLength: 2
+          pattern: "[A-Za-z]+"
+        lastName:
+          type: string
+          description: First Name to print it on card
+          example: SMITH
+          maxLength: 20
+          minLength: 2
+          pattern: "[A-Za-z]+"
+        role:
+          type: string
+          description: User role
+          enum:
+          - USER
+          - ADMIN
+          example: USER/ADMIN
+    CardStatusDto:
+      type: object
+      properties:
+        newStatus:
+          type: string
+          enum:
+          - ACTIVE
+          - BLOCKED
+          - EXPIRED
+    PageMeta:
+      type: object
+      description: Pagination metadata
+      properties:
+        size:
+          type: integer
+          format: int32
+          example: 10
+        number:
+          type: integer
+          format: int32
+          example: 0
+        totalElements:
+          type: integer
+          format: int64
+          example: 2
+        totalPages:
+          type: integer
+          format: int32
+          example: 1
+    UserPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          description: Page content
+          items:
+            $ref: "#/components/schemas/UserRespDto"
+        page:
+          $ref: "#/components/schemas/PageMeta"
+          description: Pagination info
+    CardHolderListDto:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Card status
+          enum:
+          - ACTIVE
+          - BLOCKED
+          - EXPIRED
+          example: ACTIVE/BLOCKED/EXPIRED
+        toBlock:
+          type: boolean
+          description: User's request to block the Card
+          example: false
+        expiryDate:
+          type: string
+          description: Card expiry date MM/yy
+          example: 12/25
+          pattern: "^(0[1-9]|1[0-2])/\\d{2}$"
+    CardPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          description: Page content
+          items:
+            $ref: "#/components/schemas/CardRespDto"
+        page:
+          $ref: "#/components/schemas/PageMeta"
+          description: Pagination info
+    CardsListDto:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: Cardholder User ID
+          example: 10
+          minimum: 1
+        cardHolder:
+          type: string
+          description: Cardholder name to compare in LIKE statement
+          example: TOM
+          pattern: "[A-Za-z]+"
+        status:
+          type: string
+          description: Card status
+          enum:
+          - ACTIVE
+          - BLOCKED
+          - EXPIRED
+          example: ACTIVE/BLOCKED/EXPIRED
+        toBlock:
+          type: boolean
+          description: User's request to block the Card
+          example: false
+        expiryDate:
+          type: string
+          description: Card expiry date MM/yy
+          example: 12/25
+          pattern: "^(0[1-9]|1[0-2])/\\d{2}$"
+  responses:
+    NotFound:
+      description: Entity not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponseSchema"
+    "401":
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponseSchema"
+    "403":
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponseSchema"
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponseSchema"
+    Validation:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponseSchema"
+  securitySchemes:
+    JWT Bearer:
+      type: http
+      description: JWT in header
+      in: header
+      scheme: bearer
+      bearerFormat: JWT
