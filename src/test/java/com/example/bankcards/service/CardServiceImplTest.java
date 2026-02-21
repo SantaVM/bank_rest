@@ -149,12 +149,15 @@ public class CardServiceImplTest {
     void blockRequest_shouldBlockCard() {
 
         when(repository.findById(10L)).thenReturn(Optional.of(card));
+
+        card.setToBlock(Boolean.TRUE);
+
         when(repository.saveAndFlush(any())).thenReturn(card);
         when(currentUser.getUserId()).thenReturn(1L);
 
         CardRespDto dto = service.blockRequest(10L);
 
-        assertTrue(card.getToBlock());
+        assertTrue(dto.getToBlock());
         verify(repository).saveAndFlush(card);
     }
 

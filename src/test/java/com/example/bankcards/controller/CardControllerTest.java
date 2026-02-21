@@ -8,8 +8,6 @@ import com.example.bankcards.entity.CreditCard;
 import com.example.bankcards.exception.ErrorResponseFactory;
 import com.example.bankcards.security.JwtAuthenticationFilter;
 import com.example.bankcards.service.CardService;
-import com.example.bankcards.service.CurrentUserService;
-import com.example.bankcards.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;

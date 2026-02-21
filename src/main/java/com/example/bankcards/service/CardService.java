@@ -3,7 +3,6 @@ package com.example.bankcards.service;
 import com.example.bankcards.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 
 public interface CardService {
     Page<CardRespDto> getUserCards(CardHolderListDto filter, Pageable pageable);
