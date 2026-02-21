@@ -8,6 +8,8 @@ import com.example.bankcards.entity.CreditCard;
 import com.example.bankcards.exception.ErrorResponseFactory;
 import com.example.bankcards.security.JwtAuthenticationFilter;
 import com.example.bankcards.service.CardService;
+import com.example.bankcards.service.CurrentUserService;
+import com.example.bankcards.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +24,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -143,7 +144,7 @@ public class CardControllerTest {
         Page<CardRespDto> page =
                 new PageImpl<>(List.of(new CardRespDto()));
 
-        when(cardService.getUserCards(any(), any(), any()))
+        when(cardService.getUserCards(any(), any()))
                 .thenReturn(page);
 
         mockMvc.perform(get("/api/v1/cards/my-cards"))
@@ -151,7 +152,7 @@ public class CardControllerTest {
                 .andExpect(jsonPath("$.content").isArray());
 
         verify(cardService)
-                .getUserCards(any(), any(Authentication.class), any());
+                .getUserCards(any(), any());
     }
 
     @Test
@@ -160,7 +161,7 @@ public class CardControllerTest {
         CardRespDto dto = new CardRespDto();
         dto.setId(10L);
 
-        when(cardService.blockRequest(eq(10L), any()))
+        when(cardService.blockRequest(eq(10L)))
                 .thenReturn(dto);
 
         mockMvc.perform(patch("/api/v1/cards/block/10")
@@ -168,7 +169,7 @@ public class CardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(10L));
 
-        verify(cardService).blockRequest(eq(10L), any());
+        verify(cardService).blockRequest(eq(10L));
     }
 
     @Test
@@ -179,7 +180,7 @@ public class CardControllerTest {
         dto.setToId(2L);
         dto.setAmount(new BigDecimal("1000.00"));
 
-        when(cardService.transfer(any(), any()))
+        when(cardService.transfer(any()))
                 .thenReturn(true);
 
         mockMvc.perform(post("/api/v1/cards/transfer")
@@ -189,7 +190,7 @@ public class CardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("Success"));
 
-        verify(cardService).transfer(any(), any());
+        verify(cardService).transfer(any());
     }
 
     @Test
@@ -227,14 +228,14 @@ public class CardControllerTest {
     @Test
     @WithMockUser
     void getTotalBalance_ok() throws Exception {
-        when(cardService.getTotalBalanceByUser(any()))
+        when(cardService.getTotalBalanceByUser())
                 .thenReturn("1500.50");
 
         mockMvc.perform(get("/api/v1/cards/my-balance"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("1500.50"));
 
-        verify(cardService).getTotalBalanceByUser(any());
+        verify(cardService).getTotalBalanceByUser();
     }
 
 

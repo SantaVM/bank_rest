@@ -48,6 +48,9 @@ public class CardServiceImplTest {
     @Mock
     CryptoUtils cryptoUtils;
 
+    @Mock
+    CurrentUserService currentUser;
+
     @InjectMocks
     CardServiceImpl service;
 
@@ -100,7 +103,7 @@ public class CardServiceImplTest {
 
         // when
         Page<CardRespDto> result =
-                service.getUserCards(new CardHolderListDto(), auth, PageRequest.of(0, 10));
+                service.getUserCards(new CardHolderListDto(), PageRequest.of(0, 10));
 
         // then
         assertThat(result.getContent())
@@ -147,8 +150,9 @@ public class CardServiceImplTest {
 
         when(repository.findById(10L)).thenReturn(Optional.of(card));
         when(repository.saveAndFlush(any())).thenReturn(card);
+        when(currentUser.getUserId()).thenReturn(1L);
 
-        CardRespDto dto = service.blockRequest(10L, auth);
+        CardRespDto dto = service.blockRequest(10L);
 
         assertTrue(card.getToBlock());
         verify(repository).saveAndFlush(card);
@@ -163,9 +167,10 @@ public class CardServiceImplTest {
         card.setUserId(another.getId());
 
         when(repository.findById(10L)).thenReturn(Optional.of(card));
+        when(currentUser.getUserId()).thenReturn(1L);
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.blockRequest(10L, auth));
+                () -> service.blockRequest(10L));
     }
 
     @Test
@@ -175,6 +180,8 @@ public class CardServiceImplTest {
         dto.setToId(2L);
         dto.setAmount(new BigDecimal("50.00"));
 
+        when(currentUser.getUserId()).thenReturn(1L);
+
         when(repository.withdraw(
                 eq(1L), eq(1L), any(), eq(CreditCard.CardStatus.ACTIVE), eq(false)))
                 .thenReturn(1);
@@ -183,7 +190,7 @@ public class CardServiceImplTest {
                 eq(2L), eq(1L), any(), eq(CreditCard.CardStatus.ACTIVE), eq(false)))
                 .thenReturn(1);
 
-        Boolean result = service.transfer(dto, auth);
+        Boolean result = service.transfer(dto);
 
         assertTrue(result);
     }
@@ -199,7 +206,7 @@ public class CardServiceImplTest {
                 .thenReturn(0);
 
         assertThrows(OperationRejectedException.class,
-                () -> service.transfer(dto, auth));
+                () -> service.transfer(dto));
     }
 
     @Test
@@ -232,8 +239,9 @@ public class CardServiceImplTest {
     void getTotalBalanceByUser_shouldReturnDecimalString() {
         when(repository.sumBalanceByUserId(1L))
                 .thenReturn(BigInteger.valueOf(12345));
+        when(currentUser.getUserId()).thenReturn(1L);
 
-        String result = service.getTotalBalanceByUser(auth);
+        String result = service.getTotalBalanceByUser();
 
         assertEquals("123.45", result);
     }

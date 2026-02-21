@@ -122,12 +122,11 @@ public class CardController {
     public ResponseEntity<Page<CardRespDto>> getAllForMe(
             @Valid @ModelAttribute
             Optional<CardHolderListDto> dto,
-            Authentication auth,
             @ParameterObject
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC)
             Pageable pageable) {
         Page<CardRespDto> fromDb =
-                service.getUserCards(dto.orElse(new CardHolderListDto()), auth, pageable);
+                service.getUserCards(dto.orElse(new CardHolderListDto()), pageable);
         return ResponseEntity.ok(fromDb);
     }
 
@@ -147,9 +146,8 @@ public class CardController {
             ),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
-    public  ResponseEntity<CardRespDto> blockRequest(@PathVariable Long cardId,
-                                                   Authentication auth) {
-        return ResponseEntity.ok(service.blockRequest(cardId, auth));
+    public  ResponseEntity<CardRespDto> blockRequest(@PathVariable Long cardId) {
+        return ResponseEntity.ok(service.blockRequest(cardId));
     }
 
     @PostMapping("/transfer")
@@ -168,10 +166,9 @@ public class CardController {
             @ApiResponse(responseCode = "400", ref = "Validation"),
     })
     public ResponseEntity<String> transfer(
-            @Valid @RequestBody CardTransferDto dto,
-            Authentication auth
+            @Valid @RequestBody CardTransferDto dto
     ) {
-        return ResponseEntity.ok(service.transfer(dto, auth) ? "Success" : "Failure");
+        return ResponseEntity.ok(service.transfer(dto) ? "Success" : "Failure");
     }
 
 
@@ -231,7 +228,7 @@ public class CardController {
             ),
             @ApiResponse(responseCode = "200", description = "Сумма успешно получена"),
     })
-    public ResponseEntity<String> getTotalBalance(Authentication auth) {
-        return ResponseEntity.ok(service.getTotalBalanceByUser(auth));
+    public ResponseEntity<String> getTotalBalance() {
+        return ResponseEntity.ok(service.getTotalBalanceByUser());
     }
 }

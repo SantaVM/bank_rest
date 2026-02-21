@@ -34,12 +34,13 @@ public class CardServiceImpl implements CardService{
 
     private final CardRepository repository;
     private final UserService userService;
+    private final CurrentUserService currentUser;
     private final CryptoUtils cryptoUtils;
 
     @Override
-    public Page<CardRespDto> getUserCards(CardHolderListDto filter,
-                                          Authentication auth, Pageable pageable) {
-        Long userId = extractUserId(auth);
+    public Page<CardRespDto> getUserCards(CardHolderListDto filter, Pageable pageable) {
+
+        Long userId = currentUser.getUserId();
 
         Specification<CreditCard> spec = Specification.unrestricted();
 
@@ -127,8 +128,8 @@ public class CardServiceImpl implements CardService{
 
     @Transactional
     @Override
-    public CardRespDto blockRequest(Long cardId, Authentication auth) {
-        Long userId = extractUserId(auth);
+    public CardRespDto blockRequest(Long cardId) {
+        Long userId = currentUser.getUserId();
         CreditCard card = repository.findById(cardId).orElseThrow(
                 () -> new EntityNotFoundException("Card not found with id: " + cardId)
         );
@@ -144,8 +145,9 @@ public class CardServiceImpl implements CardService{
     }
 
     @Transactional
-    public Boolean transfer(CardTransferDto dto, Authentication auth) {
-        Long userId = extractUserId(auth);
+    public Boolean transfer(CardTransferDto dto) {
+
+        Long userId = currentUser.getUserId();
 
         BigInteger amount = CardUtil.getAmountAsBigInteger(dto.getAmount());
 
@@ -205,26 +207,10 @@ public class CardServiceImpl implements CardService{
         return CardRespDto.toDto(found, cryptoUtils);
     }
 
-    private Long extractUserId(Authentication auth){
-
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new AccessDeniedException("Authentication is required");
-        }
-
-        if (!(auth.getPrincipal() instanceof UserDetails principal)) {
-            throw new AccessDeniedException("Invalid authentication principal");
-        }
-
-        if (principal instanceof User user) {
-            return user.getId();
-        }
-
-        throw new IllegalStateException("UserDetails does not expose user id");
-    }
-
     @Override
-    public String getTotalBalanceByUser(Authentication auth) {
-        Long userId = extractUserId(auth);
+    public String getTotalBalanceByUser() {
+
+        Long userId = currentUser.getUserId();
         BigInteger sum = repository.sumBalanceByUserId(userId);
         return CardUtil.fromCentsToDecimal(sum).toPlainString();
     }
