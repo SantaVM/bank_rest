@@ -1,4 +1,9 @@
 FROM eclipse-temurin:17.0.18_8-jre-alpine as builder
+
+RUN adduser --system bank-user && addgroup --system bank-group && adduser \
+    bank-user bank-group
+USER bank-user
+
 WORKDIR extracted
 ADD target/*.jar app.jar
 RUN java -Djarmode=layertools -jar app.jar extract

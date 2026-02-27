@@ -32,7 +32,7 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
         ProblemDetail pd = errorFactory.create(
                 ErrorType.AUTHORIZATION_DENIED,
                 HttpStatus.FORBIDDEN,
-                "You are not authorized to access this resource",
+                ex.getMessage(),
                 request
         );
 

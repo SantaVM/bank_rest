@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 1770852013985-5
       author: NAS
+      logicalFilePath: db/migration/12-01-changelog.yaml
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
         - createSequence:
@@ -15,10 +16,16 @@ databaseChangeLog:
   - changeSet:
       id: create-card-status-enum
       author: NAS
+      logicalFilePath: db/migration/12-01-changelog.yaml
       changes:
         - sql:
             sql: |
+              DO $$
+              BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'credit_card_status') THEN
               CREATE TYPE credit_card_status AS ENUM ('ACTIVE', 'BLOCKED', 'EXPIRED');
+              END IF;
+              END $$;
       rollback:
         - sql:
             sql: |
@@ -27,6 +34,7 @@ databaseChangeLog:
   - changeSet:
       id: 1770852013985-6
       author: NAS
+      logicalFilePath: db/migration/12-01-changelog.yaml
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
         - createTable:
@@ -79,6 +87,7 @@ databaseChangeLog:
   - changeSet:
       id: 1770852013985-7
       author: NAS
+      logicalFilePath: db/migration/12-01-changelog.yaml
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
         - addUniqueConstraint:
@@ -93,6 +102,7 @@ databaseChangeLog:
   - changeSet:
       id: 1770852013985-8
       author: NAS
+      logicalFilePath: db/migration/12-01-changelog.yaml
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
         - addForeignKeyConstraint:

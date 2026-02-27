@@ -11,6 +11,22 @@ services:
       - postgres_data:/var/lib/postgresql
     networks:
       - spring-network
+    restart: unless-stopped
+
+  bank_cards_app:
+    build: .
+    container_name: bank_app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://bank_pg:5432/bank_card
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-example}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - bank_pg
+    networks:
+      - spring-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

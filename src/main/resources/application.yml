@@ -7,7 +7,7 @@ spring:
     active: dev
 
   application:
-    name: bank-cards
+    name: bank-cards-app
 
   docker:
     compose:

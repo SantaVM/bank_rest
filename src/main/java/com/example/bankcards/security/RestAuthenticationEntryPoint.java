@@ -32,7 +32,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         ProblemDetail pd = errorFactory.create(
                 ErrorType.AUTHENTICATION_REQUIRED,
                 HttpStatus.UNAUTHORIZED,
-                "Authentication is required",
+                "Authentication is required: " + ex.getMessage(),
                 request
         );
 
@@ -40,8 +40,10 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
     }
 
     private void write(HttpServletResponse response, ProblemDetail pd) throws IOException {
+
         response.setStatus(pd.getStatus());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
         objectMapper.writeValue(response.getOutputStream(), pd);
     }
 }

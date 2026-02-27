@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 1770819097385-1
       author: NAS
+      logicalFilePath: db/migration/11-01-changelog.yaml
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
         - createSequence:
@@ -15,10 +16,16 @@ databaseChangeLog:
   - changeSet:
       id: create-user-role-enum
       author: NAS
+      logicalFilePath: db/migration/11-01-changelog.yaml
       changes:
         - sql:
             sql: |
+              DO $$
+              BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
               CREATE TYPE user_role AS ENUM ('USER', 'ADMIN');
+              END IF;
+              END $$;
       rollback:
         - sql:
             sql: |
@@ -27,6 +34,7 @@ databaseChangeLog:
   - changeSet:
       id: 1770819097385-2
       author: NAS
+      logicalFilePath: db/migration/11-01-changelog.yaml
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
         - createTable:
@@ -71,6 +79,7 @@ databaseChangeLog:
   - changeSet:
       id: 1770819097385-3
       author: NAS
+      logicalFilePath: db/migration/11-01-changelog.yaml
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
         - addUniqueConstraint:
@@ -85,6 +94,7 @@ databaseChangeLog:
   - changeSet:
       id: 1770819097385-4
       author: NAS
+      logicalFilePath: db/migration/11-01-changelog.yaml
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
         - createIndex:

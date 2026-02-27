@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 2026-02-17-credit-card-balance-check
       author: NAS
+      logicalFilePath: db/migration/13-01-changelog.yaml
       comment: "Add check constraint for non-negative balance"
       changes:
         - sql:
