@@ -1,9 +1,6 @@
 package com.example.bankcards.service;
 
-import com.example.bankcards.dto.UserLoginDto;
-import com.example.bankcards.dto.UserLoginRespDto;
-import com.example.bankcards.dto.UserRegisterDto;
-import com.example.bankcards.dto.UserRespDto;
+import com.example.bankcards.dto.*;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.ConflictException;
 import com.example.bankcards.repository.UserRepository;
@@ -45,7 +42,8 @@ public class AuthServiceImpl implements AuthService {
                         authRequest.getPassword()
                 ));
         User user = (User) auth.getPrincipal();
-        String token = jwtService.generateToken(user.getEmail());
+        UserTokenDto dto = UserTokenDto.fromUser(user);
+        String token = jwtService.generateToken(dto);
         return new UserLoginRespDto(user.getId(), token);
     }
 }

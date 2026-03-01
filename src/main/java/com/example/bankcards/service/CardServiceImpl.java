@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
@@ -95,6 +96,7 @@ public class CardServiceImpl implements CardService{
         return repository.findAll(spec, pageable).map(card -> CardRespDto.toDto(card, cryptoUtils));
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @Override
     public String generate() {
         return CardUtil.generateCardNumber();

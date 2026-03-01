@@ -41,17 +41,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize ->
                         authorize
                                 .requestMatchers(
-                                        "api/*/auth/**",
+                                        "/api/*/auth/**",
                                         "/swagger-ui.html", "/swagger-ui/**",
                                         "/swagger-resources", "/swagger-resources/**",
                                         "/configuration/ui", "/configuration/security",
                                         "/v3/api-docs", "/v3/api-docs/**",
                                         "/v3/api-docs.yaml"
                                 ).permitAll()
-                                .requestMatchers("api/*/*/admin/**").hasRole(
+                                .requestMatchers("/api/*/*/admin/**").hasRole(
                                         "ADMIN")
-                                .requestMatchers("api/*/users/**",
-                                        "api/*/cards/**").hasAnyRole("USER",
+                                .requestMatchers("/api/*/users/**",
+                                        "/api/*/cards/**").hasAnyRole("USER",
                                         "ADMIN")
                                 .anyRequest().authenticated()
                 )

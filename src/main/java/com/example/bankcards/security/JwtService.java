@@ -1,5 +1,6 @@
 package com.example.bankcards.security;
 
+import com.example.bankcards.dto.UserTokenDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -23,7 +24,7 @@ public class JwtService {
         return extractAllClaims(token).getSubject();
     }
 
-    private Claims extractAllClaims(String token){
+    public Claims extractAllClaims(String token){
         try {
             return Jwts.parser()
                     .verifyWith(getSignKey())
@@ -44,6 +45,16 @@ public class JwtService {
     public String generateToken(String email) {
         return Jwts.builder()
                 .subject(email)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * jwtExpiration))
+                .signWith(getSignKey())
+                .compact();
+    }
+
+    public String generateToken(UserTokenDto dto) {
+        return Jwts.builder()
+                .subject(dto.getEmail())
+                .claims(dto.getExtraClaims())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * jwtExpiration))
                 .signWith(getSignKey())

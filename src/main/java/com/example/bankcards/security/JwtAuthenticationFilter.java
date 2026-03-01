@@ -1,5 +1,6 @@
 package com.example.bankcards.security;
 
+import com.example.bankcards.dto.UserTokenDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,10 +41,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String token = authHeader.substring(7);
-        String email;
+        UserDetails userDetails;
 
         try {
-            email = jwtService.extractUsername(token);
+            userDetails = UserTokenDto.toUserDetails(jwtService.extractAllClaims(token));
         } catch (Exception ex) {
             point.commence(request,response,
                     new AuthenticationCredentialsNotFoundException(ex.getMessage()));
@@ -51,9 +52,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(email != null && authentication == null){
+        if(userDetails != null && authentication == null){
 
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
+//            UserDetails userDetails =
+//                    this.userDetailsService.loadUserByUsername(email);
 
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                     userDetails,

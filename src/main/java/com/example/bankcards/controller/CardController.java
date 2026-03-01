@@ -92,7 +92,7 @@ public class CardController {
             @ApiResponse(responseCode = "400", ref = "Validation")
     })
     public ResponseEntity<Page<CardRespDto>> getCardsList(
-            @Valid @ModelAttribute
+            @Valid
             Optional<CardsListDto> dto,
             @ParameterObject
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC)
@@ -119,7 +119,7 @@ public class CardController {
             @ApiResponse(responseCode = "400", ref = "Validation")
     })
     public ResponseEntity<Page<CardRespDto>> getAllForMe(
-            @Valid @ModelAttribute
+            @Valid
             Optional<CardHolderListDto> dto,
             @ParameterObject
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC)
