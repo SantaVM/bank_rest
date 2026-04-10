@@ -3,15 +3,14 @@ package com.example.bankcards.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
 
-@Component
 public class ErrorResponseFactory {
 
-    public ProblemDetail create(
+    public static ProblemDetail create(
             ErrorType type,
             HttpStatus status,
             String detail,
@@ -19,13 +18,11 @@ public class ErrorResponseFactory {
     ) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detail);
         pd.setTitle(type.name());
-        pd.setProperty("type", type.name());
-        pd.setProperty("path", request.getRequestURI());
-        pd.setProperty("timestamp", Instant.now().toString());
+        pd.setInstance(URI.create(request.getRequestURI()));
         return pd;
     }
 
-    public ProblemDetail createValidation(
+    public static ProblemDetail createValidation(
             HttpServletRequest request,
             Map<String, String> errors
     ) {

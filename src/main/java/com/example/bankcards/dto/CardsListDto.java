@@ -12,8 +12,7 @@ public class CardsListDto {
     @Min(1)
     private Long userId;
 
-    @Pattern(regexp="[A-Za-z]+", message = "Cardholder string must contain " +
-            "only Latin letters")
+    @Pattern(regexp="[A-Za-z]+", message = "Cardholder string must contain only Latin letters")
     private String cardHolder;
 
     private CreditCard.CardStatus status;

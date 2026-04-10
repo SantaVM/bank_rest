@@ -7,23 +7,25 @@ import java.util.Map;
 @Schema(name = "ErrorResponseSchema", description = "Unified error response")
 public class ErrorResponseSchema {
 
-    @Schema(example = "AUTHORIZATION_DENIED")
+    @Schema(
+            description = "The string containing a URI reference [URI] that identifies the problem type.",
+            example = "about:blank")
     public String type;
 
-    @Schema(example = "Access denied")
+    @Schema(example = "VALIDATION_ERROR")
     public String title;
 
-    @Schema(example = "403")
+    @Schema( description = "The number indicating the HTTP status code",
+            example = "400")
     public Integer status;
 
-    @Schema(example = "You are not authorized to access this resource")
+    @Schema(example = "Validation failed")
     public String detail;
 
-    @Schema(example = "/users/admin")
-    public String path;
-
-    @Schema(example = "2026-02-15T13:28:11Z")
-    public String timestamp;
+    @Schema(
+            description = "The string containing a URI reference that identifies the specific occurrence of the problem",
+            example = "/users/admin")
+    public String instance;
 
     @Schema(
             description = "Validation errors (only for VALIDATION_ERROR)",

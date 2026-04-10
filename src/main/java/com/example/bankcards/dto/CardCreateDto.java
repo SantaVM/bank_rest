@@ -3,9 +3,9 @@ package com.example.bankcards.dto;
 import com.example.bankcards.util.validators.TwoDecimalPlaces;
 import com.example.bankcards.util.validators.ValidExpirationDate;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.CreditCardNumber;
@@ -15,9 +15,9 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class CardCreateDto {
-    @Positive
+    @Min(1)
     @NotNull
-    @Schema(type = "integer", example = "51")
+    @Schema(example = "51")
     private Long userId;
 
     @CreditCardNumber

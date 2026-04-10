@@ -1,27 +1,25 @@
 package com.example.bankcards.service;
 
-import com.example.bankcards.entity.User;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CurrentUserService {
 
-    public Long getUserId() {
+    public Long getCurrentUserId() {
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new AccessDeniedException("Authentication required");
+        if (!(auth instanceof JwtAuthenticationToken jwtAuth)) {
+            throw new AccessDeniedException("JWT authentication required");
         }
 
-        Object principal = auth.getPrincipal();
+        Jwt jwt = jwtAuth.getToken();
 
-        if (principal instanceof User user) {
-            return user.getId();
-        }
-
-        throw new IllegalStateException("Unsupported principal: " + principal.getClass());
+        return jwt.getClaim("userId");
     }
 }

@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17.0.18_8-jre-alpine as builder
+FROM eclipse-temurin:17.0.18_8-jre-alpine AS builder
 
 RUN adduser --system bank-user && addgroup --system bank-group && adduser \
     bank-user bank-group

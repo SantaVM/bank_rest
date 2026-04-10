@@ -38,7 +38,7 @@ public class CardServiceImpl implements CardService{
     @Override
     public Page<CardRespDto> getUserCards(CardHolderListDto filter, Pageable pageable) {
 
-        Long userId = currentUser.getUserId();
+        Long userId = currentUser.getCurrentUserId();
 
         Specification<CreditCard> spec = Specification.unrestricted();
 
@@ -128,7 +128,7 @@ public class CardServiceImpl implements CardService{
     @Transactional
     @Override
     public CardRespDto blockRequest(Long cardId) {
-        Long userId = currentUser.getUserId();
+        Long userId = currentUser.getCurrentUserId();
         CreditCard card = repository.findById(cardId).orElseThrow(
                 () -> new EntityNotFoundException("Card not found with id: " + cardId)
         );
@@ -146,7 +146,7 @@ public class CardServiceImpl implements CardService{
     @Transactional
     public Boolean transfer(CardTransferDto dto) {
 
-        Long userId = currentUser.getUserId();
+        Long userId = currentUser.getCurrentUserId();
 
         BigInteger amount = CardUtil.getAmountAsBigInteger(dto.getAmount());
 
@@ -209,7 +209,7 @@ public class CardServiceImpl implements CardService{
     @Override
     public String getTotalBalanceByUser() {
 
-        Long userId = currentUser.getUserId();
+        Long userId = currentUser.getCurrentUserId();
         BigInteger sum = repository.sumBalanceByUserId(userId);
         return CardUtil.fromCentsToDecimal(sum).toPlainString();
     }

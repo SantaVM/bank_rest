@@ -17,7 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface ValidFromToTransfer {
 
-    String message() default "Field 'fromId' can't be equal to 'fromId'";
+    String message() default "Field 'fromId' can't be equal to 'toId'";
 
     Class<?>[] groups() default { };
 

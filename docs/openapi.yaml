@@ -135,8 +135,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserLoginRespDto"
-        "401":
-          $ref: "#/components/responses/401"
+        "400":
+          $ref: "#/components/responses/Validation"
   /api/v1/users/admin/update/{userId}:
     patch:
       tags:
@@ -335,29 +335,11 @@ paths:
       description: При отсутствии параметров фильтрации возвращается список ВСЕХ Юзеров.
       operationId: getUsers
       parameters:
-      - name: firstName
+      - name: dto
         in: query
-        required: false
+        required: true
         schema:
-          type: string
-      - name: lastName
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: email
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: role
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - USER
-          - ADMIN
+          $ref: "#/components/schemas/UserFilterDto"
       - name: page
         in: query
         description: Zero-based page index (0..N)
@@ -416,7 +398,7 @@ paths:
       parameters:
       - name: dto
         in: query
-        required: false
+        required: true
         schema:
           $ref: "#/components/schemas/CardHolderListDto"
       - name: page
@@ -507,7 +489,7 @@ paths:
       parameters:
       - name: dto
         in: query
-        required: false
+        required: true
         schema:
           $ref: "#/components/schemas/CardsListDto"
       - name: page
@@ -655,23 +637,25 @@ components:
       properties:
         type:
           type: string
-          example: AUTHORIZATION_DENIED
+          description: "The string containing a URI reference [URI] that identifies\
+            \ the problem type."
+          example: about:blank
         title:
           type: string
-          example: Access denied
+          example: VALIDATION_ERROR
         status:
           type: integer
           format: int32
-          example: 403
+          description: The number indicating the HTTP status code
+          example: 400
         detail:
           type: string
-          example: You are not authorized to access this resource
-        path:
+          example: Validation failed
+        instance:
           type: string
+          description: The string containing a URI reference that identifies the specific
+            occurrence of the problem
           example: /users/admin
-        timestamp:
-          type: string
-          example: 2026-02-15T13:28:11Z
         errors:
           type: object
           additionalProperties:
@@ -683,8 +667,10 @@ components:
       type: object
       properties:
         userId:
-          type: string
+          type: integer
+          format: int64
           example: 51
+          minimum: 1
         cardNumber:
           type: string
           example: 4000006806224829
@@ -842,6 +828,23 @@ components:
           - ACTIVE
           - BLOCKED
           - EXPIRED
+    UserFilterDto:
+      type: object
+      properties:
+        firstName:
+          type: string
+          pattern: "[A-Za-z]+"
+        lastName:
+          type: string
+          pattern: "[A-Za-z]+"
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+          - USER
+          - ADMIN
     PageMeta:
       type: object
       description: Pagination metadata

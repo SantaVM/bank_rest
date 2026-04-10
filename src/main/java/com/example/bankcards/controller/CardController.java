@@ -23,8 +23,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
 @RequestMapping("api/v1/cards")
 @RestController
 @RequiredArgsConstructor
@@ -93,12 +91,13 @@ public class CardController {
     })
     public ResponseEntity<Page<CardRespDto>> getCardsList(
             @Valid
-            Optional<CardsListDto> dto,
+            @ModelAttribute
+            CardsListDto dto,
             @ParameterObject
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC)
             Pageable pageable
     ) {
-        return ResponseEntity.ok(service.getCardsList(dto.orElse(new CardsListDto()),
+        return ResponseEntity.ok(service.getCardsList(dto,
                 pageable));
     }
 
@@ -120,12 +119,12 @@ public class CardController {
     })
     public ResponseEntity<Page<CardRespDto>> getAllForMe(
             @Valid
-            Optional<CardHolderListDto> dto,
+            CardHolderListDto dto,
             @ParameterObject
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC)
             Pageable pageable) {
         Page<CardRespDto> fromDb =
-                service.getUserCards(dto.orElse(new CardHolderListDto()), pageable);
+                service.getUserCards(dto, pageable);
         return ResponseEntity.ok(fromDb);
     }
 

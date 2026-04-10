@@ -1,6 +1,9 @@
 package com.example.bankcards.controller;
 
-import com.example.bankcards.dto.*;
+import com.example.bankcards.dto.UserLoginDto;
+import com.example.bankcards.dto.UserLoginRespDto;
+import com.example.bankcards.dto.UserRegisterDto;
+import com.example.bankcards.dto.UserRespDto;
 import com.example.bankcards.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,7 +39,7 @@ public class AuthController {
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = UserLoginRespDto.class) )
                     ),
-                    @ApiResponse(responseCode = "401", ref = "401")
+                    @ApiResponse(responseCode = "400", ref = "Validation")
             }
     )
     public ResponseEntity<UserLoginRespDto> login(@Valid @RequestBody UserLoginDto authRequest){

@@ -1,87 +1,42 @@
 package com.example.bankcards.security;
 
-import com.example.bankcards.dto.UserTokenDto;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
+import com.example.bankcards.entity.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-import java.util.Date;
+import java.time.Instant;
+import java.util.List;
 
 @Service
-@Slf4j
+@RequiredArgsConstructor
 public class JwtService {
-    @Value("${app.jwt.secret}")
-    private String secret;
+    private final JwtEncoder jwtEncoder;
 
     @Value("${app.jwt.expiration-time-min}")
-    private long jwtExpiration;
+    private long jwtTtlMinutes;
 
-    public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
-    }
+    public String generateToken(User user) {
+        Instant now = Instant.now();
 
-    public Claims extractAllClaims(String token){
-        try {
-            return Jwts.parser()
-                    .verifyWith(getSignKey())
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-        } catch (JwtException e) {
-            log.error(e.getMessage());
-            throw e;
-        }
-    }
+        List<String> roles = user.getAuthorities().stream()
+                .map(a -> a.getAuthority().replace("ROLE_", ""))
+                .toList();
 
-    private SecretKey getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("self")
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(jwtTtlMinutes * 60))
+                .subject(user.getEmail())
+                .claim("userId", user.getId())
+                .claim("roles", roles)
+                .build();
 
-    public String generateToken(String email) {
-        return Jwts.builder()
-                .subject(email)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * jwtExpiration))
-                .signWith(getSignKey())
-                .compact();
-    }
-
-    public String generateToken(UserTokenDto dto) {
-        return Jwts.builder()
-                .subject(dto.getEmail())
-                .claims(dto.getExtraClaims())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * jwtExpiration))
-                .signWith(getSignKey())
-                .compact();
-    }
-
-    public boolean validateToken(final String token) {
-        String subToken = token;
-        if(token.startsWith("Bearer ")){
-            subToken = token.substring(7);
-        }
-        try {
-            Jwts.parser().verifyWith(getSignKey()).build().parseSignedClaims(subToken);
-            return true;
-        } catch (ExpiredJwtException ex) {
-            log.error("JWT expired", ex);
-            throw ex;
-        } catch (MalformedJwtException ex) {
-            log.error("JWT is invalid", ex);
-            throw ex;
-        } catch (JwtException ex) {
-            log.error("JWT is not supported", ex);
-            throw ex;
-        } catch (IllegalArgumentException ex) {
-            log.error("Exception inside JWT Service", ex);
-            throw ex;
-        }
-
+        return jwtEncoder
+                .encode(JwtEncoderParameters.from(claims))
+                .getTokenValue();
     }
 }

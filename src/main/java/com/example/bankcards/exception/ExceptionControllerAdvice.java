@@ -25,8 +25,6 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class ExceptionControllerAdvice {
 
-    private final ErrorResponseFactory errorFactory;
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ProblemDetail> handleValidation(
             MethodArgumentNotValidException ex,
@@ -45,7 +43,7 @@ public class ExceptionControllerAdvice {
                         err.getDefaultMessage()
                 ));
 
-        ProblemDetail pd = errorFactory.createValidation(request, errors);
+        ProblemDetail pd = ErrorResponseFactory.createValidation(request, errors);
         return ResponseEntity.status(pd.getStatus()).body(pd);
     }
 
@@ -54,7 +52,7 @@ public class ExceptionControllerAdvice {
             Exception ex,
             HttpServletRequest request
     ) {
-        ProblemDetail pd = errorFactory.create(
+        ProblemDetail pd = ErrorResponseFactory.create(
                 ErrorType.CONFLICT,
                 HttpStatus.CONFLICT,
                 ex.getMessage(),
@@ -75,7 +73,7 @@ public class ExceptionControllerAdvice {
         ex.printStackTrace();
 
         if (ex instanceof BadCredentialsException) {
-            errorDetail = errorFactory.create(
+            errorDetail = ErrorResponseFactory.create(
                     ErrorType.BAD_CREDENTIALS,
                     HttpStatus.UNAUTHORIZED,
                     ex.getMessage(),
@@ -84,7 +82,7 @@ public class ExceptionControllerAdvice {
         }
 
         if (ex instanceof HttpMessageNotReadableException) {
-            errorDetail = errorFactory.create(
+            errorDetail = ErrorResponseFactory.create(
                     ErrorType.BAD_REQUEST,
                     HttpStatus.BAD_REQUEST,
                     ex.getMessage(),
@@ -93,7 +91,7 @@ public class ExceptionControllerAdvice {
         }
 
         if (ex instanceof NoSuchElementException || ex instanceof EntityNotFoundException) {
-            errorDetail = errorFactory.create(
+            errorDetail = ErrorResponseFactory.create(
                     ErrorType.NOT_FOUND,
                     HttpStatus.NOT_FOUND,
                     ex.getMessage(),
@@ -102,7 +100,7 @@ public class ExceptionControllerAdvice {
         }
 
         if (ex instanceof AccountStatusException) {
-            errorDetail = errorFactory.create(
+            errorDetail = ErrorResponseFactory.create(
                         ErrorType.AUTHORIZATION_DENIED,
                         HttpStatus.UNAUTHORIZED,
                         ex.getMessage(),
@@ -114,7 +112,7 @@ public class ExceptionControllerAdvice {
                 ex instanceof OperationRejectedException ||
                 ex instanceof BusinessException ||
                 ex instanceof AccessDeniedException) {
-            errorDetail = errorFactory.create(
+            errorDetail = ErrorResponseFactory.create(
                     ErrorType.AUTHORIZATION_DENIED,
                     HttpStatus.FORBIDDEN,
                     ex.getMessage(),
@@ -123,7 +121,7 @@ public class ExceptionControllerAdvice {
         }
 
         if (ex instanceof SignatureException || ex instanceof ExpiredJwtException || ex instanceof MalformedJwtException) {
-            errorDetail = errorFactory.create(
+            errorDetail = ErrorResponseFactory.create(
                     ErrorType.AUTHENTICATION_REQUIRED,
                     HttpStatus.UNAUTHORIZED,
                     ex.getMessage(),
@@ -132,7 +130,7 @@ public class ExceptionControllerAdvice {
         }
 
         if (errorDetail == null) {
-            errorDetail = errorFactory.create(
+            errorDetail = ErrorResponseFactory.create(
                     ErrorType.INTERNAL_ERROR,
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "Unexpected server error",

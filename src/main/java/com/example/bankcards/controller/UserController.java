@@ -4,8 +4,8 @@ import com.example.bankcards.dto.UserFilterDto;
 import com.example.bankcards.dto.UserRespDto;
 import com.example.bankcards.dto.UserUpdateDto;
 import com.example.bankcards.entity.User;
-import com.example.bankcards.util.swagger.CommonApiResponses;
 import com.example.bankcards.service.UserService;
+import com.example.bankcards.util.swagger.CommonApiResponses;
 import com.example.bankcards.util.swagger.UserPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,6 +24,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("api/v1/users")
@@ -50,8 +51,11 @@ public class UserController {
             ),
     })
     public ResponseEntity<UserRespDto> authenticatedUser(
-            @AuthenticationPrincipal User user
+            @AuthenticationPrincipal Jwt jwt
     ) {
+        Long userId = jwt.getClaim("userId");
+
+        User  user = service.findOne(userId);
 
         UserRespDto dto = UserRespDto.toDto(user);
 
@@ -74,22 +78,15 @@ public class UserController {
             ),
     })
     public ResponseEntity<Page<UserRespDto>> getUsers(
-            @RequestParam(required = false) String firstName,
-            @RequestParam(required = false) String lastName,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) User.Role role,
+            @Valid
+            @ModelAttribute
+            UserFilterDto dto,
             @ParameterObject
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC)
             Pageable pageable
     ) {
-        UserFilterDto filter = new UserFilterDto(
-                firstName,
-                lastName,
-                email,
-                role
-        );
 
-        Page<UserRespDto> usersPage = service.findAll(filter, pageable);
+        Page<UserRespDto> usersPage = service.findAll(dto, pageable);
 
         return ResponseEntity.ok(usersPage);
     }
